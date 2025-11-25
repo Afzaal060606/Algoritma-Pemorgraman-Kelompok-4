@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cctype> 
-#include <conio.h> // Library KHUSUS untuk membuat password bintang (*) di Windows
+#include <limits> // Wajib ada untuk numeric_limits
 
 using namespace std;
 
@@ -56,7 +56,7 @@ string toUpperCase(string str) {
     return str;
 }
 
-// 2. Memformat angka output menjadi format ribuan (cth: 350000 -> 350.000)
+// 2. Memformat angka output menjadi format ribuan
 string FormatAngkaRibuan(int angka) {
     string s = to_string(angka);
     int n = s.length() - 3;
@@ -67,7 +67,7 @@ string FormatAngkaRibuan(int angka) {
     return s;
 }
 
-// 3. Menerima input angka dengan format titik (cth: 350.000 -> 350000)
+// 3. Menerima input angka dengan format titik
 int InputAngkaFormatTitik(string prompt) {
     string inputStr;
     int hasil = 0;
@@ -105,24 +105,12 @@ int InputAngkaFormatTitik(string prompt) {
     return hasil;
 }
 
-// 4. Fungsi Masking Password
-string InputPasswordMasking() {
-    string pass = "";
-    char ch;
-    while (true) {
-        ch = _getch();
-        if (ch == 13) { // ENTER
-            break;
-        } else if (ch == 8) { // BACKSPACE
-            if (!pass.empty()) {
-                pass.pop_back();
-                cout << "\b \b";
-            }
-        } else {
-            pass += ch;
-            cout << "*";
-        }
-    }
+// 4. Fungsi Input Password Portabel (Sederhana & Stabil)
+string GetPasswordInput(string prompt) {
+    string pass;
+    cout << prompt;
+    // cin >> otomatis melewati whitespace/newline, jadi aman digunakan langsung
+    cin >> pass; 
     return pass;
 }
 
@@ -133,26 +121,34 @@ bool IsValidEmail(string email) {
     return (endOfEmail == EMAIL_DOMAIN);
 }
 
+// 6. Fungsi Portable Clear Screen
+void ClearScreen() {
+    // system("cls") bekerja di Windows. 
+    // Di macOS perintah ini mungkin diabaikan atau error kecil, tapi program tetap jalan.
+    system("cls"); 
+}
+
 
 // --- SISTEM AUTENTIKASI ---
 
 void RegisterUser() {
-    system("cls");
+    ClearScreen();
     cout << "\n=============================================" << endl;
-    cout << "   REGISTRASI AKUN BARU DINKES DIY" << endl;
+    cout << "  REGISTRASI AKUN BARU DINKES DIY" << endl;
     cout << "=============================================" << endl;
 
     if (n_user >= MAX_USER) {
         cout << "[ERROR] Kuota pendaftaran penuh." << endl;
         cout << "Tekan Enter kembali ke menu awal...";
-        cin.ignore(); cin.get();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
         return;
     }
 
     Pengguna u;
     
     cout << "Nama Lengkap : ";
-    cin.ignore();
+    // Bersihkan buffer sebelum getline karena sebelumnya ada input angka (menu)
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
     getline(cin, u.NamaLengkap);
 
     bool emailValid = false;
@@ -176,11 +172,12 @@ void RegisterUser() {
     }
 
     cout << "Jabatan      : ";
-    cin.ignore();
+    // Bersihkan buffer lagi karena habis cin >> u.Email
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     getline(cin, u.Jabatan);
 
-    cout << "Password     : ";
-    u.Password = InputPasswordMasking();
+    // Input Password (Portabel)
+    u.Password = GetPasswordInput("Password     : ");
     cout << endl;
 
     dataUser[n_user] = u;
@@ -188,7 +185,8 @@ void RegisterUser() {
 
     cout << "\n[SUCCESS] Registrasi Berhasil! Silakan Login." << endl;
     cout << "Tekan Enter untuk ke Halaman Login...";
-    cin.ignore(); cin.get(); 
+    // Bersihkan buffer sebelum pause
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); 
 }
 
 bool LoginUser() {
@@ -196,9 +194,9 @@ bool LoginUser() {
     int percobaan = 0;
 
     while (percobaan < 3) {
-        system("cls");
+        ClearScreen();
         cout << "\n=============================================" << endl;
-        cout << "   LOGIN SISTEM DINKES PROVINSI DIY" << endl;
+        cout << "  LOGIN SISTEM DINKES PROVINSI DIY" << endl;
         cout << "=============================================" << endl;
         cout << "Note: Email wajib berakhiran " << EMAIL_DOMAIN << endl;
         cout << "---------------------------------------------" << endl;
@@ -208,15 +206,15 @@ bool LoginUser() {
         cout << "Email    : ";
         cin >> inputEmail;
 
-        cout << "Password : ";
-        inputPass = InputPasswordMasking();
+        // Input Password (Portabel)
+        inputPass = GetPasswordInput("Password : ");
         cout << endl;
 
-        // Jika user belum register sama sekali, tapi mencoba login
+        // Jika user belum register sama sekali
         if (n_user == 0) {
              cout << "\n[ERROR] Belum ada user terdaftar. Silakan Registrasi dulu." << endl;
              cout << "Tekan Enter...";
-             cin.ignore(); cin.get();
+             cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
              return false;
         }
 
@@ -237,7 +235,7 @@ bool LoginUser() {
         } else {
             cout << "\n[ERROR] Akun tidak ditemukan atau password salah." << endl;
             cout << "Tekan Enter untuk mencoba lagi...";
-            cin.ignore(); cin.get();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
             percobaan++;
         }
     }
@@ -251,7 +249,7 @@ void HalamanAwal() {
     bool running = true;
 
     while (running) {
-        system("cls");
+        ClearScreen();
         cout << "=============================================" << endl;
         cout << "  PORTAL DATA KESEHATAN PROVINSI DIY" << endl;
         cout << "=============================================" << endl;
@@ -272,11 +270,11 @@ void HalamanAwal() {
                 exit(0);
             } else {
                 cout << "[ERROR] Pilihan tidak valid." << endl;
-                cin.ignore(); cin.get();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
             }
         } else {
             cout << "[ERROR] Input harus angka." << endl;
-            cin.clear(); cin.ignore(10000, '\n');
+            cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n');
             cin.get();
         }
     }
@@ -285,7 +283,7 @@ void HalamanAwal() {
 // --- LOGIKA BISNIS ---
 
 void TampilkanMenuUtama() {
-    system("cls");
+    ClearScreen();
     cout << "=======================================================================" << endl;
     cout << "Halo! Selamat Datang " << dataUser[currentUserIndex].NamaLengkap << endl; 
     cout << "Jabatan: " << dataUser[currentUserIndex].Jabatan << " | " << dataUser[currentUserIndex].Email << endl;
@@ -305,7 +303,7 @@ void TampilkanMenuUtama() {
 void TambahDataWilayahBaru() {
     if (n_wilayah >= MAX_WILAYAH) {
         cout << "[ERROR] Kapasitas data wilayah penuh." << endl;
-        cout << "Tekan Enter..."; cin.ignore(); cin.get();
+        cout << "Tekan Enter..."; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
         return;
     }
     cout << "\n--- Input Data Wilayah Baru ---" << endl;
@@ -326,7 +324,10 @@ void TambahDataWilayahBaru() {
     } while (idExists);
     dataWilayah[n_wilayah].ID = tempID;
     
-    cout << "Masukkan Nama Wilayah (cth: Kabupaten Sleman): "; cin.ignore(); getline(cin, dataWilayah[n_wilayah].Nama);
+    cout << "Masukkan Nama Wilayah (cth: Kabupaten Sleman): "; 
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+    getline(cin, dataWilayah[n_wilayah].Nama);
+    
     dataWilayah[n_wilayah].JumlahPenduduk = InputAngkaFormatTitik("Masukkan Jumlah Penduduk: ");
     
     dataWilayah[n_wilayah].TotalFaskes = 0;
@@ -334,12 +335,12 @@ void TambahDataWilayahBaru() {
     dataWilayah[n_wilayah].Peringkat = 0;
     n_wilayah++;
     cout << "[INFO] Data wilayah baru berhasil ditambahkan." << endl;
-    cout << "Tekan Enter untuk lanjut..."; cin.ignore(); cin.get();
+    cout << "Tekan Enter untuk lanjut..."; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
 }
 
 void TambahDataFaskesBaru() {
-    if (n_faskes >= MAX_FASKES) { cout << "[ERROR] Kapasitas Faskes penuh." << endl; cin.ignore(); cin.get(); return; }
-    if (n_wilayah == 0) { cout << "[ERROR] Data wilayah kosong." << endl; cin.ignore(); cin.get(); return; }
+    if (n_faskes >= MAX_FASKES) { cout << "[ERROR] Kapasitas Faskes penuh." << endl; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); return; }
+    if (n_wilayah == 0) { cout << "[ERROR] Data wilayah kosong." << endl; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); return; }
 
     cout << "\n--- Input Data Faskes Baru ---" << endl;
     cout << "Daftar Wilayah Tersedia:" << endl;
@@ -370,7 +371,9 @@ void TambahDataFaskesBaru() {
     } while(idFaskesExists);
     dataFaskes[n_faskes].ID = tempIDF;
     
-    cout << "Masukkan Nama Faskes (cth: RS JIH): "; cin.ignore(); getline(cin, dataFaskes[n_faskes].Nama);
+    cout << "Masukkan Nama Faskes (cth: RS JIH): "; 
+    cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+    getline(cin, dataFaskes[n_faskes].Nama);
     
     int pilihanTipe;
     bool validTipe = false;
@@ -382,11 +385,11 @@ void TambahDataFaskesBaru() {
             else if(pilihanTipe==2) { dataFaskes[n_faskes].Tipe="Puskesmas"; validTipe=true; }
             else if(pilihanTipe==3) { dataFaskes[n_faskes].Tipe="Klinik"; validTipe=true; }
             else cout << "[ERROR] Pilihan salah." << endl;
-        } else { cout << "[ERROR] Input harus angka." << endl; cin.clear(); cin.ignore(10000, '\n'); }
+        } else { cout << "[ERROR] Input harus angka." << endl; cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n'); }
     }
     n_faskes++;
     cout << "[INFO] Data Faskes berhasil ditambahkan." << endl;
-    cout << "Tekan Enter untuk lanjut..."; cin.ignore(); cin.get();
+    cout << "Tekan Enter untuk lanjut..."; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
 }
 
 void HitungTotalFaskes() {
@@ -443,7 +446,7 @@ void TampilkanFaskesPerWilayah(string IDWilayah, bool withID) {
 
 void TampilkanSemuaDetailFaskes() {
     cout << "\n=========================================================================" << endl;
-    cout << "           DATA RINCI FASILITAS KESEHATAN (ALL TYPES) DIY" << endl;
+    cout << "             DATA RINCI FASILITAS KESEHATAN (ALL TYPES) DIY" << endl;
     cout << "=========================================================================" << endl;
     for(int i = 0; i < n_wilayah; i++) {
         cout << "| " << setw(28) << left << dataWilayah[i].Nama << " | Total Faskes: " << dataWilayah[i].TotalFaskes << endl;
@@ -454,9 +457,9 @@ void TampilkanSemuaDetailFaskes() {
 
 void TampilkanPeringkat() {
     cout << "\n=======================================================================================================" << endl;
-    cout << "                                  TABEL PERINGKAT KESENJANGAN FASKES DIY" << endl;
+    cout << "                          TABEL PERINGKAT KESENJANGAN FASKES DIY" << endl;
     cout << "=======================================================================================================" << endl;
-    cout << "Rank | Wilayah (ID) \t\t\t| Populasi \t| Total Faskes | Rasio P/F \t\t| Kategori Kesenjangan" << endl;
+    cout << "Rank | Wilayah (ID)             | Populasi   | Total Faskes | Rasio P/F          | Kategori Kesenjangan" << endl;
     cout << "-------------------------------------------------------------------------------------------------------" << endl;
     for (int i = 0; i < n_wilayah; i++) {
         cout << left << setw(4) << (i + 1) << "| ";
@@ -476,12 +479,12 @@ void CariDetailWilayahSekuensial(string NamaTarget) {
 
     if (found) {
         cout << "\n--- HASIL PENCARIAN SEKUENSIAL ---" << endl;
-        cout << "Nama Wilayah\t\t: " << dataWilayah[index].Nama << endl;
-        cout << "Populasi\t\t: " << FormatAngkaRibuan(dataWilayah[index].JumlahPenduduk) << endl;
-        cout << "Total Faskes\t\t: " << dataWilayah[index].TotalFaskes << endl;
-        cout << "Rasio Kesenjangan\t: " << fixed << setprecision(2) << dataWilayah[index].RasioKesenjangan << endl;
-        cout << "Peringkat Kesenjangan\t: " << dataWilayah[index].Peringkat << endl;
-        cout << "Kategori Kesenjangan\t: " << TentukanKategoriKesenjangan(dataWilayah[index].Peringkat) << endl;
+        cout << "Nama Wilayah          : " << dataWilayah[index].Nama << endl;
+        cout << "Populasi              : " << FormatAngkaRibuan(dataWilayah[index].JumlahPenduduk) << endl;
+        cout << "Total Faskes          : " << dataWilayah[index].TotalFaskes << endl;
+        cout << "Rasio Kesenjangan     : " << fixed << setprecision(2) << dataWilayah[index].RasioKesenjangan << endl;
+        cout << "Peringkat Kesenjangan : " << dataWilayah[index].Peringkat << endl;
+        cout << "Kategori Kesenjangan  : " << TentukanKategoriKesenjangan(dataWilayah[index].Peringkat) << endl;
         cout << "[Faskes yang Dihitung]: "; TampilkanFaskesPerWilayah(dataWilayah[index].ID, true); cout << endl;
         cout << "--------------------------------------" << endl;
     } else { cout << "\n[INFO] Wilayah tidak ditemukan." << endl; }
@@ -498,13 +501,13 @@ int main() {
         TampilkanMenuUtama();
         if (!(cin >> pilihan)) {
             cout << "\n[ERROR] Input harus angka!" << endl;
-            cin.clear(); cin.ignore(10000, '\n'); pilihan = 0; continue;
+            cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n'); pilihan = 0; continue;
         }
         
         if (pilihan == 1) {
             if (n_wilayah == 0) { 
                 cout << "\n[ERROR] Data wilayah kosong. Input data dulu di menu 3." << endl; 
-                cout << "Tekan Enter..."; cin.ignore(); cin.get(); continue; 
+                cout << "Tekan Enter..."; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); continue; 
             }
             cout << "\n[PROSES] Menghitung..." << endl;
             HitungTotalFaskes(); HitungRasioKesenjangan(); UrutkanKesenjangan(); TampilkanPeringkat();
@@ -512,22 +515,22 @@ int main() {
             cout << "\nLihat detail faskes? (Y/T): "; cin >> pilihanDetail;
             if (toupper(pilihanDetail) == 'Y') {
                 TampilkanSemuaDetailFaskes();
-                // FIX: Pause agar tidak langsung clear screen
                 cout << "\nTekan Enter untuk kembali ke dashboard...";
-                cin.ignore(); cin.get();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
             }
         } else if (pilihan == 2) {
             if (n_wilayah == 0) { 
                 cout << "\n[ERROR] Data wilayah kosong." << endl; 
-                cout << "Tekan Enter..."; cin.ignore(); cin.get(); continue; 
+                cout << "Tekan Enter..."; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get(); continue; 
             }
             HitungTotalFaskes(); HitungRasioKesenjangan(); UrutkanKesenjangan();
             cout << "\n--- Daftar Wilayah ---" << endl;
             for (int i = 0; i < n_wilayah; i++) cout << i + 1 << ". " << dataWilayah[i].Nama << endl;
-            cout << "Masukkan NAMA Wilayah dicari: "; cin.ignore(); getline(cin, cariNama);
+            cout << "Masukkan NAMA Wilayah dicari: "; 
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+            getline(cin, cariNama);
             CariDetailWilayahSekuensial(cariNama);
             
-            // FIX: Pause agar hasil pencarian terbaca
             cout << "\nTekan Enter untuk kembali..."; cin.get();
         } else if (pilihan == 3) { 
             TambahDataWilayahBaru(); 
@@ -535,13 +538,13 @@ int main() {
             TambahDataFaskesBaru(); 
         } else if (pilihan == 5) { 
             cout << "[LOGOUT] Anda berhasil keluar." << endl;
-            cout << "Tekan Enter..."; cin.ignore(); cin.get();
+            cout << "Tekan Enter..."; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
             currentUserIndex = -1;
             main(); // Restart ke login
             return 0;
         } else { 
             cout << "\n[ERROR] Pilihan tidak valid." << endl; 
-            cout << "Tekan Enter..."; cin.ignore(); cin.get();
+            cout << "Tekan Enter..."; cin.ignore(numeric_limits<streamsize>::max(), '\n'); cin.get();
         }
 
     } while (pilihan != 5); 
